@@ -5,17 +5,14 @@ import "./DeliveryService.sol";
 
 contract Registry {
 
-    enum Attendance { Bulk, Single }
-    
     struct VCRecord {
-        Attendance attendance;
+        string date;
         string centreDID;
         uint claimedTokens; // 0 is a valid value for our domain logic
         bool recorded;      // used only to check existence of a vchash in registry
     }
 
-    event RecordBulk(bytes32 vchash, string centreDID, uint claimedTokens);
-    event RecordSingle(bytes32 vchash, string centreDID, uint claimedTokens, string unitName);
+    event Record(bytes32 vchash, string date, string centreDID, uint claimedTokens);
 
     modifier onlyAdmin() {
         if (msg.sender != admin)
@@ -37,33 +34,13 @@ contract Registry {
         amp = new AMP(admin);
     }
 
-    /**@notice Record a bulk verifiable claim
-     * @param _vchash Verifiable claim hash
-     * @param _centreDID Digital Identity of the centre this verifiable claim belongs to
-     * @param _claimedTokens Amount of tokens claimed, calculated off-chain
-     */
-    function recordBulk(bytes32 _vchash, string _centreDID, uint _claimedTokens) external onlySystem()
-    {
-        if (registry[_vchash].recorded)
-            throw;
-
-        // notarize
-        registry[_vchash] = VCRecord({
-            attendance: Attendance.Bulk,
-            centreDID: _centreDID, 
-            claimedTokens: _claimedTokens,
-            recorded: true
-        });
-
-        RecordBulk(_vchash, _centreDID, _claimedTokens);
-    }
-
     /**@notice Record a per-child verifiable claim
+     * @param _unitCode The internal identifier of the value-per-unit for this attendee
+     * @param _date Verifiable claim creation date
      * @param _vchash Verifiable claim hash
      * @param _centreDID Digital Identity of the centre this verifiable claim belongs to
-     * @param _unitCode The internal identifier of the value-per-unit for this attendee
      */
-    function recordSingle(bytes32 _vchash, string _centreDID, uint _unitCode) external onlySystem()
+    function record(uint _unitCode, string _date, bytes32 _vchash, string _centreDID) external onlySystem()
     {
         if (registry[_vchash].recorded)
             throw;
@@ -71,22 +48,19 @@ contract Registry {
         uint _claimedTokens = 1;
 
         uint unitValue = AMP(amp).getValue(_unitCode);
-        string memory unitName = 'default';
         
-        if (unitValue != uint(0)) {
+        if (unitValue != uint(0))
             _claimedTokens = unitValue;
-            AMP(amp).getName(_unitCode);
-        }
 
         // notarize
         registry[_vchash] = VCRecord({
-            attendance: Attendance.Single,
+            date: _date,
             centreDID: _centreDID, 
             claimedTokens: _claimedTokens,
             recorded: true
         });
 
-        RecordSingle(_vchash, _centreDID, _claimedTokens, unitName);
+        Record(_vchash, _date, _centreDID, _claimedTokens);
     }
 
     /**@notice Check whether a verifiable claim has been recorded
