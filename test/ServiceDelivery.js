@@ -117,7 +117,7 @@ contract('DeliveryService', function(accounts) {
         instance.registry()
         .then(function(registryAddress) {
           var Reg = Registry.at(registryAddress)
-          Reg.record(VC_HASH, DATE, CENTRE_DID, UNIT_CODE, { from: owners[0] })
+          Reg.record(UNIT_CODE, DATE, VC_HASH, CENTRE_DID, { from: owners[0] })
           .then(function() {
             Reg.exists(VC_HASH).then(function(exists) {            
               assert.isTrue(exists, "Verifiable Claim has not been recorded")
