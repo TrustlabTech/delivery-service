@@ -6,13 +6,13 @@ import "./DeliveryService.sol";
 contract Registry {
 
     struct VCRecord {
-        string date;
+        uint timestamp;
         string centreDID;
         uint claimedTokens; // 0 is a valid value for our domain logic
         bool recorded;      // used only to check existence of a vchash in registry
     }
 
-    event Record(bytes32 vchash, string date, string centreDID, uint claimedTokens);
+    event Record(bytes32 vchash, uint timestamp, string centreDID, uint claimedTokens);
 
     modifier onlyAdmin() {
         if (msg.sender != admin)
@@ -36,11 +36,11 @@ contract Registry {
 
     /**@notice Record a per-child verifiable claim
      * @param _unitCode The internal identifier of the value-per-unit for this attendee
-     * @param _date Verifiable claim creation date
+     * @param _timestamp Verifiable claim creation timestamp
      * @param _vchash Verifiable claim hash
      * @param _centreDID Digital Identity of the centre this verifiable claim belongs to
      */
-    function record(uint _unitCode, string _date, bytes32 _vchash, string _centreDID) external onlySystem()
+    function record(bytes32 _vchash, uint _timestamp, uint _unitCode, string _centreDID) external onlySystem()
     {
         if (registry[_vchash].recorded)
             throw;
@@ -54,13 +54,13 @@ contract Registry {
 
         // notarize
         registry[_vchash] = VCRecord({
-            date: _date,
+            timestamp: _timestamp,
             centreDID: _centreDID, 
             claimedTokens: _claimedTokens,
             recorded: true
         });
 
-        Record(_vchash, _date, _centreDID, _claimedTokens);
+        Record(_vchash, _timestamp, _centreDID, _claimedTokens);
     }
 
     /**@notice Check whether a verifiable claim has been recorded
