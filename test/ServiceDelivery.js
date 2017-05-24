@@ -16,7 +16,7 @@ var ATTENDEES = 73,
     CLAIMED_TOKENS = 73,
     UNIT_CODE = 1001,
     CENTRE_ADDRESS = '0x0536806df512D6cDDE913Cf95c9886f65b1D3462',
-    TIMESTAMP = 742745040,
+    DATE = new Date(742745040 * 1000).toISOString(),
     CENTRE_DID = new Buffer('did:0x0536806df512D6cDDE913Cf95c9886f65b1D3462', 'utf8').toString('hex'),
     VC_HASH = '0x03b2dee406816f8550309c3345f1e8ba96a28079481503c68dcc524560ad65cf'
 
@@ -117,7 +117,7 @@ contract('DeliveryService', function(accounts) {
         instance.registry()
         .then(function(registryAddress) {
           var Reg = Registry.at(registryAddress)
-          Reg.record(VC_HASH, TIMESTAMP, UNIT_CODE, CENTRE_DID, { from: owners[0] })
+          Reg.record(VC_HASH, DATE, UNIT_CODE, CENTRE_DID, { from: owners[0] })
           .then(function() {
             Reg.exists(VC_HASH).then(function(exists) {            
               assert.isTrue(exists, "Verifiable Claim has not been recorded")
@@ -189,7 +189,7 @@ contract('DeliveryService', function(accounts) {
               assert.equal(centreBalance, CLAIMED_TOKENS, "DeliveryService has not sent claimed tokens to the ECDCentre DID address")
               console.log()
               console.log('Recorded claim:\n')
-              console.log('Date: ' + (new Date(parseInt(recordedClaim[0].toString()) * 1000).toISOString()))
+              console.log('Date: ' + recordedClaim[0])
               console.log('Centre DID: ' + (new Buffer(recordedClaim[1], 'hex').toString('utf8')))
               console.log('Claimed tokens: ' + recordedClaim[2].toString())
               console.log()
